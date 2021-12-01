@@ -44,6 +44,8 @@ let
                   return this.getCell(row).childNodes[0].textContent;
                 }
             });
+            // click for initial sort
+            document.getElementsByTagName("th")[0].click();
         }
         window.onload = init;
       </script>
