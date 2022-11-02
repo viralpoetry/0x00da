@@ -1,34 +1,34 @@
 # 0x00DA toolkit  
 
-`ooda` will visit provided addresses and save HTTP code, Title, IP address or redirect.  
+`ooda` will visit provided addresses and create the CSV file with:  
+  * http code
+  * page title
+  * ip address
+  * and/or info about the redirect
 
 ## Build  
 ```
-nible build
+nimble build
 ```
 
 ## Usage  
 
 Expected input is one FQDN per line.  
 
-Visit addresses and save to a CSV file  
+Visit addresses and save to a CSV file:  
 ```
 cat example.com.txt | ooda > example.com.csv
 ```
 
-Generate HTML table from the CSV findings
+Generate HTML table from the CSV findings:
 ```
 ooda -H -i example.com.csv -o example.com.html
 ```
 
 ## TODO  
 ```
-# lower socket timeout by using tcp.dial directly?
 # use async instead of threads?
 # use browser user-agent
 # sort html results when converting
-# diagnoze what kind of ssl error?
-# what to do with "parseHtml(body) - IndexDefect" in title?
 # sanitize title so we dont get h4cked ourselves
-# add -h --help
 ```

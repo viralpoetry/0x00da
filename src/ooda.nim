@@ -15,9 +15,8 @@ let
   csvHeaderRow = "respCode;fqdn;ipAddr;location;title"
   p = newParser("0x00DA"):
     flag("-H", "--html", help = "Produce HTML file")
-    option("-o", "--output-file", help = "Output file for the ")
+    option("-o", "--output-file", help = "Output file for html format")
     option("-i", "--input-file", help = "Input file to be converted")
-  opts = p.parse()
 
 proc parseHtmlTitle(body: string): string =
   var ret = ""
@@ -73,56 +72,61 @@ proc threadFunc(partialUrls: seq[string]) {.thread.} =
   ctrlChan.send(1)
 
 when isMainModule:
-  if opts.html:
+  try:
+    var opts = p.parse()
+    if opts.html:
+      assert opts.output_file != ""
+      assert opts.input_file != ""
     # Convert CSV file to a HTML table
-    if opts.output_file == "" or opts.input_file == "":
-      echo "Define input/output files to be converted."
-    else:
       echo "Generating HTML table file..."
       templateHTML(opts.input_file, opts.output_file)
-  else:
-    # all urls loaded from stdin
-    var urls: seq[string]
-    # Parse stdin input line by line and try to observe where it leads to
-    while not endOfFile(stdin):
-      var url: string = readLine(stdin)
-      # if no uri scheme is supplied, use https
-      if not url.startsWith("http://") or url.startsWith("https://"):
-        url = "https://" & url
-        urls.add(url)
-    # divide urls to be crawled by multiple threads
-    var inputLen = len(urls)
-    var fairShare = int (inputLen / numThreads)
-    var firstShare = inputLen - ((numThreads - 1) * fairShare)
-    # print the CSV header first
-    echo csvHeaderRow
-    # create channels for control and crawler
-    ctrlChan.open()
-    chan.open()
-    # create the crawler threads and provide them urls
-    # first thread
-    var index = firstShare
-    createThread(threads[0], threadFunc, urls[0..firstShare - 1])
-    # the rest of threads
-    for i in 1..high(threads):
-      createThread(threads[i], threadFunc, urls[index..index + fairShare - 1])
-      # calculate index for the next thread
-      index = index + fairShare
-    var finished = 0
-    while true:
-      # receive the actual result in a non-blocking way
-      let crawlerMsg = chan.tryRecv()
-      if crawlerMsg.dataAvailable:
-        echo crawlerMsg.msg
-      # receive control message once the thread ended
-      # This must run after we receive the actual messages !
-      let ctrlMsg = ctrlChan.tryRecv()
-      if ctrlMsg.dataAvailable:
-        finished = finished + 1
-        if finished >= numThreads:
-          # all threads finished
-          break
-      sleep(10)
-    joinThreads(threads)
-    chan.close()
-    ctrlChan.close()
+      quit(0)
+  except ShortCircuit as e:
+    if e.flag == "argparse_help":
+      echo p.help
+      quit(1)
+  # all urls loaded from stdin
+  var urls: seq[string]
+  # Parse stdin input line by line and try to observe where it leads to
+  while not endOfFile(stdin):
+    var url: string = readLine(stdin)
+    # if no uri scheme is supplied, use https
+    if not url.startsWith("http://") or url.startsWith("https://"):
+      url = "https://" & url
+      urls.add(url)
+  # divide urls to be crawled by multiple threads
+  var inputLen = len(urls)
+  var fairShare = int (inputLen / numThreads)
+  var firstShare = inputLen - ((numThreads - 1) * fairShare)
+  # print the CSV header first
+  echo csvHeaderRow
+  # create channels for control and crawler
+  ctrlChan.open()
+  chan.open()
+  # create the crawler threads and provide them urls
+  # first thread
+  var index = firstShare
+  createThread(threads[0], threadFunc, urls[0..firstShare - 1])
+  # the rest of threads
+  for i in 1..high(threads):
+    createThread(threads[i], threadFunc, urls[index..index + fairShare - 1])
+    # calculate index for the next thread
+    index = index + fairShare
+  var finished = 0
+  while true:
+    # receive the actual result in a non-blocking way
+    let crawlerMsg = chan.tryRecv()
+    if crawlerMsg.dataAvailable:
+      echo crawlerMsg.msg
+    # receive control message once the thread ended
+    # This must run after we receive the actual messages !
+    let ctrlMsg = ctrlChan.tryRecv()
+    if ctrlMsg.dataAvailable:
+      finished = finished + 1
+      if finished >= numThreads:
+        # all threads finished
+        break
+    sleep(10)
+  joinThreads(threads)
+  chan.close()
+  ctrlChan.close()
