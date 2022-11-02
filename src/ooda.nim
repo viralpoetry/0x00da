@@ -41,6 +41,14 @@ proc threadFunc(partialUrls: seq[string]) {.thread.} =
       location = "n/a"
     # try to connect and collect basic information
     try:
+      # FIXME ugly preflight request because of the unimplemented timeout in newHttpClient
+      # See https://github.com/nim-lang/Nim/issues/14807
+      let socket = newSocket()
+      let ctx = newContext()
+      wrapSocket(ctx, socket)
+      # strip 'https://'
+      socket.connect(url[8 .. ^1], Port(443), timeout=1000)
+      socket.close()
       let response = client.request(url, httpMethod = HttpGet)
       # get the IP address
       ipAddr = client.getSocket.getPeerAddr[0]
@@ -50,7 +58,7 @@ proc threadFunc(partialUrls: seq[string]) {.thread.} =
       # if there is a redirect, collect the location
       if response.status.startsWith("30"):
         location = response.headers.getOrDefault("location")
-      msg = fmt"{response.status[.. 3]};{url};{ipAddr};{location};{title}"
+      msg = fmt"{response.status[0 .. 3]};{url};{ipAddr};{location};{title}"
     except SslError:
       continue
     except OSError:  # Connection timed out
