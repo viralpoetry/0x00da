@@ -11,4 +11,5 @@ bin           = @["ooda"]
 # Dependencies
 
 requires "nim >= 1.4.2",
-         "argparse"
+         "argparse",
+         "htmlparser"

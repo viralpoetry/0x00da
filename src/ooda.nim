@@ -1,6 +1,7 @@
+import pkg/htmlparser
 
 import
-  argparse, strutils, strformat, net, xmltree, httpclient, htmlparser
+  argparse, strutils, strformat, net, xmltree, httpclient
 
 from streams import newFileStream
 from templates import templateHTML, htmlFoot, htmlHeadBody, tr
@@ -77,8 +78,7 @@ when isMainModule:
     if opts.html:
       assert opts.output_file != ""
       assert opts.input_file != ""
-    # Convert CSV file to a HTML table
-      echo "Generating HTML table file..."
+      # Convert CSV file to a HTML table
       templateHTML(opts.input_file, opts.output_file)
       quit(0)
   except ShortCircuit as e:
