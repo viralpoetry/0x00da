@@ -3,8 +3,6 @@
 import
   strutils, parsecsv, tables
 
-var
-  pcsv: CsvParser
 let
   colors = {"200": "okColor", "300": "redirColor", "400": "notfoundColor"}.toTable
   htmlFoot* = """</tbody></table></div></body></html>"""
@@ -65,11 +63,17 @@ let
       """
 
 proc templateHTML *(inFile: string, outFile: string) =
+  echo "Generating HTML table file '", outFile, "' from CSV file '", inFile, "'..."
   var col = ""
+  var pcsv: CsvParser
+  try:
+    pcsv.open(inFile, separator = ';')
+  except OSError, CsvError:
+    echo "Error: Unable to open input file: ", inFile
+    quit(1)
   let fw = open(outFile, fmWrite)
   # Write HTML header
   fw.write(htmlHeadBody)
-  pcsv.open(infile, separator = ';')
   pcsv.readHeaderRow()
   while pcsv.readRow(columns = 5):
     var color: string
