@@ -1,10 +1,10 @@
 # 0x00DA toolkit  
 
-`ooda` will visit provided addresses and create the CSV file with:  
-  * http code
-  * page title
-  * ip address
-  * and/or info about the redirect
+`ooda` will visit provided websitesa and create the CSV file with:  
+  * HTTP status code
+  * Page title
+  * IP address
+  * Title or information about the redirect
 
 ## Build  
 ```
@@ -15,14 +15,14 @@ nimble build
 
 Expected input is one FQDN per line.  
 
-Visit addresses and save to a CSV file:  
+Visit addresses and output to stdout.
 ```
 cat example.com.txt | ooda > example.com.csv
 ```
 
-Generate HTML table from the CSV findings:
+Generate HTML table from the CSV findings. The command will produce a self contained `<filename>.html` HTML file.
 ```
-ooda -H -i example.com.csv -o example.com.html
+ooda html example.com.csv
 ```
 
 ## TODO  

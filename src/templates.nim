@@ -1,4 +1,4 @@
-# Defined HTML templates and the support functions
+## HTML templates and the supporting functions.
 
 import
   strutils, parsecsv, tables
@@ -62,8 +62,9 @@ let
      <tbody>
       """
 
-proc templateHTML *(inFile: string, outFile: string) =
-  echo "Generating HTML table file '", outFile, "' from CSV file '", inFile, "'..."
+proc convertCSVtoHTML *(inFile: string, outFile: string) =
+  ## Generates an HTML file from the provided CSV file.
+  echo "Generating HTML file '", outFile, "' from CSV file '", inFile, "'..."
   var col = ""
   var pcsv: CsvParser
   try:
@@ -75,21 +76,24 @@ proc templateHTML *(inFile: string, outFile: string) =
   # Write HTML header
   fw.write(htmlHeadBody)
   pcsv.readHeaderRow()
-  while pcsv.readRow(columns = 5):
-    var color: string
-    if pcsv.rowEntry("respCode").startswith("2"): color = colors["200"]
-    elif pcsv.rowEntry("respCode").startswith("3"): color = colors["300"]
-    elif pcsv.rowEntry("respCode").startswith("4"): color = colors["400"]
-    else: color = "unknownRespCode"
-    col = tr.multiReplace(
-      ("%%color", color),
-      ("%%respCode", pcsv.rowEntry("respCode").strip()),
-      ("%%fqdn", pcsv.rowEntry("fqdn").strip()),
-      ("%%ipAddr", pcsv.rowEntry("ipAddr").strip()),
-      ("%%location", pcsv.rowEntry("location").strip()),
-      ("%%title", pcsv.rowEntry("title").strip())
-    )
-    fw.write(col)
+  try:
+    while pcsv.readRow(columns = 5):
+      var color: string
+      if pcsv.rowEntry("respCode").startswith("2"): color = colors["200"]
+      elif pcsv.rowEntry("respCode").startswith("3"): color = colors["300"]
+      elif pcsv.rowEntry("respCode").startswith("4"): color = colors["400"]
+      else: color = "unknownRespCode"
+      col = tr.multiReplace(
+        ("%%color", color),
+        ("%%respCode", pcsv.rowEntry("respCode").strip()),
+        ("%%fqdn", pcsv.rowEntry("fqdn").strip()),
+        ("%%ipAddr", pcsv.rowEntry("ipAddr").strip()),
+        ("%%location", pcsv.rowEntry("location").strip()),
+        ("%%title", pcsv.rowEntry("title").strip())
+      )
+      fw.write(col)
+  except CsvError as e:
+    echo "Error: CSV parsing error: ", e.msg
   close(pcsv)
   fw.write(htmlFoot)
   close(fw)

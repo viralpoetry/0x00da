@@ -1,6 +1,6 @@
 # Package
 
-version       = "1.0.0"
+version       = "2.0.0"
 author        = "Peter Gasper"
 description   = "Check FQDNs for HTTP code, Title, IP address and/or redirect."
 license       = "MIT"
