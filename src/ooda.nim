@@ -48,7 +48,7 @@ proc collectWebsiteInformation(partialUrls: seq[string]) {.thread.} =
       let socket = newSocket()
       let ctx = newContext()
       wrapSocket(ctx, socket)
-      # strip 'https://'
+      # Strip https:// URI scheme for socket connection
       socket.connect(url[8 .. ^1], Port(443), timeout=1000)
       socket.close()
       let response = client.request(url, httpMethod = HttpGet)
@@ -89,10 +89,13 @@ when isMainModule:
   # Parse stdin input line by line and try to observe where it leads to
   while not endOfFile(stdin):
     var url: string = readLine(stdin)
-    # If no uri scheme is supplied, use https
-    if not url.startsWith("http://") or url.startsWith("https://"):
+    # Skip empty lines
+    if url.len == 0:
+      continue
+    # Add URI if missing
+    if not url.startsWith("https://"):
       url = "https://" & url
-      urls.add(url)
+    urls.add(url)
   # Divide urls to be crawled by multiple threads
   var inputLen = len(urls)
   var fairShare = int (inputLen / numThreads)
